@@ -10,6 +10,7 @@ set(CMAKE_CXX_STANDARD 23)
 file(GLOB_RECURSE SRC "src/*.cpp")
 
 add_library(hyprdecor SHARED ${SRC})
+set_target_properties(hyprdecor PROPERTIES PREFIX "")
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(deps REQUIRED IMPORTED_TARGET
@@ -17,7 +18,6 @@ pkg_check_modules(deps REQUIRED IMPORTED_TARGET
     libdrm
     libinput
     libudev
-    librsvg-2.0
     pangocairo
     pixman-1
     wayland-server

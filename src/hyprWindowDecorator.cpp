@@ -13,7 +13,6 @@
 #include <hyprland/src/protocols/LayerShell.hpp>
 #include <hyprland/src/render/OpenGL.hpp>
 #include <pango/pangocairo.h>
-#include <librsvg/rsvg.h>
 #include <filesystem>
 #include <fstream>
 #include <sstream>

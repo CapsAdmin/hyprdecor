@@ -2,7 +2,6 @@
 #include "hyprWindowDecorator.hpp"
 #include "util.hpp"
 #include <hyprland/src/config/ConfigManager.hpp>
-#include <librsvg/rsvg.h>
 #include <filesystem>
 
 static std::string resolveTexturePath(const std::string &base, const std::vector<std::string> &suffixes, const std::string &fallback = "")
@@ -12,13 +11,6 @@ static std::string resolveTexturePath(const std::string &base, const std::vector
         std::string path = base + suffix;
         if (std::filesystem::exists(path) && std::filesystem::is_regular_file(path))
             return path;
-        if (!path.ends_with(".png") && !path.ends_with(".svg"))
-        {
-            if (std::filesystem::exists(path + ".png") && std::filesystem::is_regular_file(path + ".png"))
-                return path + ".png";
-            if (std::filesystem::exists(path + ".svg") && std::filesystem::is_regular_file(path + ".svg"))
-                return path + ".svg";
-        }
     }
     return fallback;
 }

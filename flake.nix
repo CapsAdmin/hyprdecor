@@ -33,7 +33,7 @@
         src = ./.;
 
         inherit (pkgs.hyprland) nativeBuildInputs;
-        buildInputs = [pkgs.librsvg];
+        buildInputs = [];
 
         meta = with lib; {
           homepage = "https://github.com/CapsAdmin/hyprdecor";
@@ -49,7 +49,7 @@
         src = ./.;
 
         inherit (pkgs.hyprland) nativeBuildInputs;
-        buildInputs = [pkgs.librsvg];
+        buildInputs = [];
         
         cmakeFlags = ["-DCMAKE_BUILD_TYPE=Debug"];
         dontStrip = true;
@@ -107,7 +107,6 @@
         name = "hyprdecor";
         buildInputs = with pkgsFor.${system}; [
           hyprland.packages.${system}.hyprland
-          librsvg
         ];
         inputsFrom = [hyprland.packages.${system}.hyprland];
       };

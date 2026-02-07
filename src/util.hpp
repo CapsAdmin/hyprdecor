@@ -11,7 +11,6 @@
 #include <hyprland/src/protocols/LayerShell.hpp>
 #include <hyprland/src/render/OpenGL.hpp>
 #include <pango/pangocairo.h>
-#include <librsvg/rsvg.h>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -21,70 +20,6 @@ static cairo_surface_t *loadSurface(std::string path, SNinePatchInfo *pInfo = nu
 {
     if (path.empty())
         return nullptr;
-
-    // Handle SVG files
-    if (path.ends_with(".svg"))
-    {
-        GError *error = nullptr;
-        RsvgHandle *handle = rsvg_handle_new_from_file(path.c_str(), &error);
-
-        if (error || !handle)
-        {
-            if (error)
-                g_error_free(error);
-            return nullptr;
-        }
-
-        gdouble out_width, out_height;
-        gboolean has_dimensions = rsvg_handle_get_intrinsic_size_in_pixels(handle, &out_width, &out_height);
-
-        if (!has_dimensions)
-        {
-            // Fallback to viewport size if intrinsic size not available
-            RsvgRectangle viewport;
-            GError *geom_error = nullptr;
-            rsvg_handle_get_geometry_for_layer(handle, NULL, &viewport, NULL, NULL, &geom_error);
-            if (geom_error)
-            {
-                g_error_free(geom_error);
-                g_object_unref(handle);
-                return nullptr;
-            }
-            out_width = viewport.width;
-            out_height = viewport.height;
-        }
-
-        int width = targetSize > 0 ? targetSize : (int)out_width;
-        int height = targetSize > 0 ? targetSize : (int)out_height;
-
-        cairo_surface_t *surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
-        cairo_t *cr = cairo_create(surface);
-
-        RsvgRectangle viewport;
-        if (targetSize > 0)
-        {
-            double scale = (double)targetSize / std::max(out_width, out_height);
-            double w = out_width * scale;
-            double h = out_height * scale;
-            viewport = {(targetSize - w) / 2.0, (targetSize - h) / 2.0, w, h};
-        }
-        else
-        {
-            viewport = {0, 0, out_width, out_height};
-        }
-
-        GError *render_error = nullptr;
-        rsvg_handle_render_document(handle, cr, &viewport, &render_error);
-        if (render_error)
-        {
-            g_error_free(render_error);
-        }
-
-        cairo_destroy(cr);
-        g_object_unref(handle);
-
-        return surface;
-    }
 
     // Handle PNG files
     cairo_surface_t *rawSurface = cairo_image_surface_create_from_png(path.c_str());
@@ -420,28 +355,24 @@ static std::string resolveIconPath(const std::string &iconName)
             for (const auto &size : sizes)
             {
                 // Standard structure: icons/{theme}/{size}/apps/{icon}
-                iconPaths.push_back(baseDir + "/icons/" + theme + "/" + size + "/apps/" + iconName + ".svg");
                 iconPaths.push_back(baseDir + "/icons/" + theme + "/" + size + "/apps/" + iconName + ".png");
                 // Oxygen structure: icons/{theme}/base/{size}/apps/{icon}
-                iconPaths.push_back(baseDir + "/icons/" + theme + "/base/" + size + "/apps/" + iconName + ".svg");
                 iconPaths.push_back(baseDir + "/icons/" + theme + "/base/" + size + "/apps/" + iconName + ".png");
                 // Breeze structure: icons/{theme}/apps/{size}/{icon} (size without 'x')
                 std::string sizeNum = size;
                 if (size.find("x") != std::string::npos)
                     sizeNum = size.substr(0, size.find("x")); // "48x48" -> "48"
-                iconPaths.push_back(baseDir + "/icons/" + theme + "/apps/" + sizeNum + "/" + iconName + ".svg");
                 iconPaths.push_back(baseDir + "/icons/" + theme + "/apps/" + sizeNum + "/" + iconName + ".png");
             }
         }
         // Also check pixmaps as fallback
-        iconPaths.push_back(baseDir + "/pixmaps/" + iconName + ".svg");
         iconPaths.push_back(baseDir + "/pixmaps/" + iconName + ".png");
         iconPaths.push_back(baseDir + "/pixmaps/" + iconName);
     }
 
     for (const auto &path : iconPaths)
     {
-        if (std::filesystem::exists(path) && (path.ends_with(".png") || path.ends_with(".svg")))
+        if (std::filesystem::exists(path) && path.ends_with(".png"))
         {
             return path;
         }
@@ -464,7 +395,7 @@ static void loadAppIcon(const std::string &appId, SP<CTexture> &out, int targetS
         return;
 
     auto iconPath = resolveIconPath(iconName);
-    if (iconPath.empty() || (!iconPath.ends_with(".png") && !iconPath.ends_with(".svg")))
+    if (iconPath.empty() || !iconPath.ends_with(".png"))
         return;
 
     loadTexture(iconPath, out, true, targetSize);
